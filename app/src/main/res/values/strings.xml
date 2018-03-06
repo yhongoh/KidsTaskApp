@@ -1,0 +1,8 @@
+<resources>
+    <string name="app_name">できた！</string>
+    <string name="app_todo">やることリスト</string>
+    <string name="action_settings">設定</string>
+    <string name="input_name">タスク登録</string>
+    <string name="addTask">登録する</string>
+    <string name="taskTitle">件名</string>
+</resources>

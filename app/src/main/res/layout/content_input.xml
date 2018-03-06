@@ -1,0 +1,174 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:paddingBottom="16dp"
+    android:paddingLeft="16dp"
+    android:paddingRight="16dp"
+    android:paddingTop="16dp"
+    app:layout_behavior="@string/appbar_scrolling_view_behavior"
+    tools:context="jp.happyandsmile.kidstaskapp.InputActivity"
+    tools:showIn="@layout/activity_input">
+
+    <TextView
+        android:id="@+id/taskTextView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/taskTitle"
+        android:layout_alignBottom="@+id/title_edit_text"
+        android:textSize="16dp"/>
+
+    <EditText
+        android:id="@+id/title_edit_text"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_toRightOf="@+id/taskTextView"
+        android:layout_marginLeft="50dp" />
+
+    <ImageView
+        android:id="@+id/alarm"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/title_edit_text"
+        android:layout_marginTop="30dp"
+        android:background="@drawable/alarm" />
+
+    <Button
+        android:id="@+id/date_button"
+        style="@style/Widget.AppCompat.Button.Borderless"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignBaseline="@+id/times_button"
+        android:layout_alignBottom="@+id/times_button"
+        android:layout_alignStart="@+id/title_edit_text"
+        android:text="_ _ _ _ / _ _ / _ _"
+        android:textSize="16dp" />
+
+    <Button
+        android:id="@+id/times_button"
+        style="@style/Widget.AppCompat.Button.Borderless"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignBottom="@+id/view2"
+        android:layout_toEndOf="@+id/date_button"
+        android:text="_ _ : _ _"
+        android:textSize="16dp"/>
+
+    <ImageView
+        android:id="@+id/iterateImageView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:background="@drawable/iterate"
+        android:layout_marginTop="30dp"
+        android:layout_below="@+id/date_button" />
+
+    <TextView
+        android:id="@+id/iterateTextView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignBottom="@+id/view"
+        android:layout_alignStart="@+id/imageTextView"
+        android:text="繰り返し設定"
+        android:textSize="16dp"/>
+
+    <ImageView
+        android:id="@+id/cameraImageView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:background="@drawable/camera"
+        android:layout_marginTop="30dp"
+        android:layout_below="@+id/iterateImageView" />
+
+    <ImageView
+        android:id="@+id/imageView"
+        android:layout_width="60dp"
+        android:layout_height="60dp"
+        android:layout_above="@+id/view3"
+        android:layout_alignStart="@+id/date_button"
+        android:background="#00000000" />
+
+    <TextView
+        android:id="@+id/imageTextView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignStart="@+id/date_button"
+        android:text="添付画像を設定する"
+        android:layout_alignBottom="@+id/cameraImageView"
+        android:textSize="16dp"/>
+    <!--android:layout_above="@+id/belongingsImageView"-->
+
+
+    <!--
+    <ImageView
+        android:id="@+id/belongingsImageView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentStart="true"
+        android:layout_below="@+id/cameraImageView"
+        android:layout_marginTop="30dp"
+        android:background="@drawable/belongings" />
+
+    <TextView
+        android:id="@+id/belongingsTextView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignBottom="@+id/belongingsImageView"
+        android:layout_alignStart="@+id/imageTextView"
+        android:text="持ち物を設定する"
+        android:textSize="16dp" />
+        -->
+
+    <Button
+        android:id="@+id/addTask_button"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/addTask"
+        android:paddingLeft="5dp"
+        android:paddingRight="5dp"
+        android:textSize="16dp"
+        android:background="@drawable/custom_button"
+        android:textColor="#ffffff"
+        android:layout_alignParentBottom="true"
+        android:layout_centerHorizontal="true" />
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="@android:color/darker_gray"
+        android:layout_alignBottom="@+id/title_edit_text" />
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="@android:color/darker_gray"
+        android:layout_alignBottom="@+id/alarm"
+        android:id="@+id/view2" />
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="@android:color/darker_gray"
+        android:layout_alignBottom="@+id/iterateImageView"
+        android:id="@+id/view" />
+
+    <View
+    android:layout_width="match_parent"
+    android:layout_height="1dp"
+    android:background="@android:color/darker_gray"
+    android:layout_alignBottom="@+id/cameraImageView"
+    android:id="@+id/view3" />
+
+    <!--
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="@android:color/darker_gray"
+        android:layout_alignBottom="@+id/belongingsImageView"
+        android:id="@+id/view4" />
+        -->
+
+
+</RelativeLayout>

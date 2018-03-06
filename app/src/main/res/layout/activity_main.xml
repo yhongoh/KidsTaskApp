@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8"?>
+<android.support.design.widget.CoordinatorLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:fitsSystemWindows="true"
+    tools:context="jp.happyandsmile.kidstaskapp.MainActivity">
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="今日やること"
+        android:textColor="@color/colorAccent"
+        android:id="@+id/date"
+        android:textSize="26dp"
+        android:textStyle="bold"
+        android:layout_marginTop="20dp"
+        android:layout_alignParentTop="true"
+        android:layout_gravity="center_horizontal"/>
+
+    <android.support.design.widget.FloatingActionButton
+        android:id="@+id/fab"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom|end"
+        android:layout_margin="16dp"
+        android:src="@drawable/plus"
+        app:backgroundTint="@color/colorAccent"/>
+
+    <ListView
+        android:id="@+id/listView1"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_marginTop="70dp"
+        android:layout_below="@+id/date"
+        />
+
+    <ImageView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:src="@drawable/right"
+        android:id="@+id/nextDay"
+        android:layout_marginTop="20dp"
+        android:layout_gravity="end" />
+
+    <ImageView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:src="@drawable/left"
+        android:id="@+id/previousDay"
+        android:layout_marginTop="20dp"
+        android:layout_gravity="start" />
+
+
+</android.support.design.widget.CoordinatorLayout>
