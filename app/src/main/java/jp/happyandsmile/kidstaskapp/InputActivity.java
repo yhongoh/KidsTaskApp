@@ -34,6 +34,7 @@ import android.widget.TimePicker;
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
@@ -45,7 +46,8 @@ public class InputActivity extends AppCompatActivity {
     private static final int PERMISSIONS_REQUEST_CODE = 100;
     private static final int CHOOSER_REQUEST_CODE = 100;
 
-    private int mYear, mMonth, mDay, mHour, mMinute,displayYear,displayMonth,displayDay,displayHour,displayMinute,dayOfWeek;
+    private int mYear, mMonth, mDay, mHour, mMinute, dayOfWeek;
+    private Integer nextDay, nextAlarm;
     private int errorCause;
     private boolean mMonday, mTuesday, mWednesday, mThursday, mFriday, mSaturday, mSunday;
     private Button mDoneButton;
@@ -56,11 +58,11 @@ public class InputActivity extends AppCompatActivity {
     private Task mTask;
     private ToDo mToDo;
     private ImageView mImageView;
-    private Date date, time, mDate;
+    private Date date, time, mDate,defaltLastDate;
     private Calendar cal, calendar;
     private Long long_mDate;
-    //private List<Integer> checkedItems;
     private String dateString, timeString;
+    private ArrayList checkedItems;
     final String[] items = {"繰り返さない", "毎日", "毎週（曜日指定）"};
 
     private View.OnClickListener mOnDateClickListener = new View.OnClickListener() {
@@ -111,21 +113,32 @@ public class InputActivity extends AppCompatActivity {
 
             // タイトル、日付と時間がない場合にDialogを表示するする
             // タスク設定時刻が現在時刻より前の場合にはDialogを表示する
+            //繰り返し設定のあるタスクを更新する場合にはDialogを表示し、単発の変更か、以降の予定全ての変更かを確認する
             if (mTitleEdit.getText().toString().equals("") == true || dateString == null || timeString == null) {
                 errorCause = 1;
                 showWarningDiaog();
             } else if (date.compareTo(currentDate) < 0) {
                 errorCause = 2;
                 showWarningDiaog();
+            } else if (mTask != null) {
+                if (mTask.getSunday() || mTask.getMonday() || mTask.getTuesday() || mTask.getWednesday() || mTask.getThursday() || mTask.getFriday() || mTask.getSaturday()) {
+                    showConfirmDialog();
+                } else {
+                    addTask();
+                    if (BuildConfig.DEBUG) {
+                        Log.d("onClick_addTask1", "onClick_addTask");
+                    }
+                    finish();
+                }
+
             } else {
                 addTask();
+                if (BuildConfig.DEBUG) {
+                    Log.d("onClick_addTask2", "onClick_addTask2");
+                }
                 finish();
             }
-            //繰り返し設定のあるタスクを更新する場合にはDialogを表示し、単発の変更か、以降の予定全ての変更かを確認する
-            //else if (mTask != null) {
-            //    if (mTask.getSunday() || mTask.getMonday() || mTask.getTuesday() || mTask.getWednesday() || mTask.getThursday() || mTask.getFriday() || mTask.getSaturday()) {
-            //        showConfirmDialog();
-             }
+        }
     };
 
     private View.OnClickListener mOnImageClickListener = new View.OnClickListener() {
@@ -301,8 +314,9 @@ public class InputActivity extends AppCompatActivity {
         Realm realm = Realm.getDefaultInstance();
         mTask = realm.where(Task.class).equalTo("id", taskId).findFirst();
 
-        if (mTask != null){
-        mToDo = realm.where(ToDo.class).equalTo("taskId", mTask.getId()).findFirst();}
+        if (mTask != null) {
+            mToDo = realm.where(ToDo.class).equalTo("taskId", mTask.getId()).findFirst();
+        }
 
         // mDateの取得とCalendar型への変換
         long_mDate = intent.getLongExtra("long_mDate", 0);
@@ -325,16 +339,16 @@ public class InputActivity extends AppCompatActivity {
             cal = Calendar.getInstance();
             cal.setTimeInMillis(long_mDate);
             mYear = cal.get(Calendar.YEAR);
-            mMonth =cal.get(Calendar.MONTH);
+            mMonth = cal.get(Calendar.MONTH);
             mDay = cal.get(Calendar.DAY_OF_MONTH);
 
             //表示日時の0時0分
             calendar = Calendar.getInstance();
             calendar.setTimeInMillis(long_mDate);
             mYear = calendar.get(Calendar.YEAR);
-            mMonth =calendar.get(Calendar.MONTH);
+            mMonth = calendar.get(Calendar.MONTH);
             mDay = calendar.get(Calendar.DAY_OF_MONTH);
-            calendar.set(mYear,mMonth,mDay,0,0);
+            calendar.set(mYear, mMonth, mDay, 0, 0);
             mDate = calendar.getTime();
 
 
@@ -361,7 +375,7 @@ public class InputActivity extends AppCompatActivity {
             } else if (mMonday || mTuesday || mWednesday || mThursday || mFriday || mSaturday || mSunday) {
                 StringBuilder sb = new StringBuilder();
                 String[] theDayOfWeek = {"月", "火", "水", "木", "金", "土", "日"};
-                Boolean theDOW[] = {mMonday,mTuesday,mWednesday,mThursday,mFriday,mSaturday,mSunday};
+                Boolean theDOW[] = {mMonday, mTuesday, mWednesday, mThursday, mFriday, mSaturday, mSunday};
 
                 for (int i = 0; i < theDOW.length; i++) {
                     if (theDOW[i]) {
@@ -419,75 +433,83 @@ public class InputActivity extends AppCompatActivity {
 
         }
 
-            String title = mTitleEdit.getText().toString();
-            mTask.setTitle(title);
+        String title = mTitleEdit.getText().toString();
+        mTask.setTitle(title);
 
-            GregorianCalendar calendar = new GregorianCalendar(mYear, mMonth, mDay, mHour, mMinute);
-            date = calendar.getTime();
-            mTask.setDate(date);
+        GregorianCalendar calendar = new GregorianCalendar(mYear, mMonth, mDay, mHour, mMinute);
+        date = calendar.getTime();
+        mTask.setDate(date);
 
-            Calendar cal1 = Calendar.getInstance();
-            //タスク一覧で時刻でソートするために年月日は固定とする
-            cal1.set(2000, 1, 1, mHour, mMinute);
-            time = cal1.getTime();
-            mTask.setDisplayTime(time);
+        Calendar cal1 = Calendar.getInstance();
+        //タスク一覧で時刻でソートするために年月日は固定とする
+        cal1.set(2000, 1, 1, mHour, mMinute);
+        time = cal1.getTime();
+        mTask.setDisplayTime(time);
 
-            SimpleDateFormat strdate = new SimpleDateFormat("yyyy/MM/dd");
-            String datestring = strdate.format(calendar.getTime());
-            mTask.setDatestring(datestring);
+        SimpleDateFormat strdate = new SimpleDateFormat("yyyy/MM/dd");
+        String datestring = strdate.format(calendar.getTime());
+        mTask.setDatestring(datestring);
 
-            //繰り返し設定の登録
-            mTask.setMonday(mMonday);
-            mTask.setTuesday(mTuesday);
-            mTask.setWednesday(mWednesday);
-            mTask.setThursday(mThursday);
-            mTask.setFriday(mFriday);
-            mTask.setSaturday(mSaturday);
-            mTask.setSunday(mSunday);
+        //繰り返し設定の登録
+        mTask.setMonday(mMonday);
+        mTask.setTuesday(mTuesday);
+        mTask.setWednesday(mWednesday);
+        mTask.setThursday(mThursday);
+        mTask.setFriday(mFriday);
+        mTask.setSaturday(mSaturday);
+        mTask.setSunday(mSunday);
 
-            //mToDoの更新
-            mToDo.setDate(date);
-            mToDo.setDatestring(datestring);
-            mToDo.setStatus(0);
-            mToDo.setTaskId(mTask.getId());
-
-            //画像の登録
-            BitmapDrawable drawable = (BitmapDrawable) mImageView.getDrawable();
-
-            if (drawable != null) {
-                Bitmap bitmap = drawable.getBitmap();
-                ByteArrayOutputStream baos = new ByteArrayOutputStream();
-                bitmap.compress(Bitmap.CompressFormat.JPEG, 80, baos);
-                byte[] mBitmapArray = baos.toByteArray();
-
-                mTask.setImageBytes(mBitmapArray);
-            }
-
-            realm.copyToRealmOrUpdate(mTask);
-            realm.copyToRealmOrUpdate(mToDo);
-            realm.commitTransaction();
-
-            realm.close();
-
-            //AlarmManagerの設定
-            Intent resultIntent = new Intent(InputActivity.this, TaskAlarmReceiver.class);
-            resultIntent.putExtra(MainActivity.EXTRA_TASK, mTask.getId());
-            PendingIntent resultPendingIntent = PendingIntent.getBroadcast(
-                    this,
-                    mTask.getId(),
-                    resultIntent,
-                    PendingIntent.FLAG_UPDATE_CURRENT
-            );
-
-
-            AlarmManager alarmManager = (AlarmManager) getSystemService(ALARM_SERVICE);
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                alarmManager.setAlarmClock(new AlarmManager.AlarmClockInfo(calendar.getTimeInMillis(), null), resultPendingIntent);
-            } else {
-                alarmManager.setExact(AlarmManager.RTC_WAKEUP, calendar.getTimeInMillis(), resultPendingIntent);
-            }
+        //LastDateがnullの場合に初期値（2100/12/31 23:59:59)を設定
+        if (mTask.getLastDate() == null) {
+            Calendar cal2 = Calendar.getInstance();
+            cal2.set(2099,11,31,23,59,59);
+            cal2.set(Calendar.MILLISECOND,000);
+            defaltLastDate = cal2.getTime();
+            mTask.setLastDate(defaltLastDate);
         }
 
+        //mToDoの更新
+        mToDo.setDate(date);
+        mToDo.setDatestring(datestring);
+        mToDo.setStatus(0);
+        mToDo.setTaskId(mTask.getId());
+
+        //画像の登録
+        BitmapDrawable drawable = (BitmapDrawable) mImageView.getDrawable();
+
+        if (drawable != null) {
+            Bitmap bitmap = drawable.getBitmap();
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            bitmap.compress(Bitmap.CompressFormat.JPEG, 80, baos);
+            byte[] mBitmapArray = baos.toByteArray();
+
+            mTask.setImageBytes(mBitmapArray);
+        }
+
+        realm.copyToRealmOrUpdate(mTask);
+        realm.copyToRealmOrUpdate(mToDo);
+        realm.commitTransaction();
+
+        realm.close();
+
+        //AlarmManagerの設定
+        Intent resultIntent = new Intent(InputActivity.this, TaskAlarmReceiver.class);
+        resultIntent.putExtra(MainActivity.EXTRA_TASK, mTask.getId());
+        PendingIntent resultPendingIntent = PendingIntent.getBroadcast(
+                this,
+                mTask.getId(),
+                resultIntent,
+                PendingIntent.FLAG_UPDATE_CURRENT
+        );
+
+
+        AlarmManager alarmManager = (AlarmManager) getSystemService(ALARM_SERVICE);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            alarmManager.setAlarmClock(new AlarmManager.AlarmClockInfo(calendar.getTimeInMillis(), null), resultPendingIntent);
+        } else {
+            alarmManager.setExact(AlarmManager.RTC_WAKEUP, calendar.getTimeInMillis(), resultPendingIntent);
+        }
+    }
 
 
     @Override
@@ -540,7 +562,7 @@ public class InputActivity extends AppCompatActivity {
 
         //新規追加の場合には今日の曜日をデフォルトで設定
 
-        if (mTask==null) {
+        if (mTask == null) {
             Calendar c = Calendar.getInstance();
             dayOfWeek = c.get(Calendar.DAY_OF_WEEK);
             if (dayOfWeek == 1) {
@@ -560,7 +582,7 @@ public class InputActivity extends AppCompatActivity {
             }
         }
 
-        final boolean[]checkedItems = {mMonday, mTuesday, mWednesday, mThursday, mFriday, mSaturday, mSunday};
+        final boolean[] checkedItems = {mMonday, mTuesday, mWednesday, mThursday, mFriday, mSaturday, mSunday};
 
         final AlertDialog.Builder checkDlg = new AlertDialog.Builder(this);
         checkDlg.setTitle("選択");
@@ -670,18 +692,20 @@ public class InputActivity extends AppCompatActivity {
                                 }
                             }
                         }
-                        }
-                    });
+                    }
+                });
 
-                    // 表示
-                        checkDlg.create().show();
-                }
+        // 表示
+        checkDlg.create().show();
+    }
 
     //入力チェックでNGとなった旨のダイアログを表示させる
     private void showWarningDiaog() {
-        Log.d("showWarning","showWarning");
+        if (BuildConfig.DEBUG) {
+            Log.d("showWarning", "showWarning");
+        }
         AlertDialog.Builder warningDlg = new AlertDialog.Builder(InputActivity.this);
-        if (errorCause ==1 ){
+        if (errorCause == 1) {
             warningDlg.setMessage("件名、日時を入力してください");
         } else if (errorCause == 2) {
             warningDlg.setMessage("現在時刻以降の日時を設定してください");
@@ -699,10 +723,11 @@ public class InputActivity extends AppCompatActivity {
         dialog.show();
     }
 
-    /*
     //繰り返し設定があった場合にその日のみ変更するか、以降の予定を変更するか確認する
     private void showConfirmDialog() {
-        Log.d("showConfirm","showConfirm");
+        if (BuildConfig.DEBUG) {
+            Log.d("showConfirm", "showConfirm");
+        }
         final String[] items = {"この予定のみ変更", "これ以降の全てを変更"};
         int defaultItem = 0; // デフォルトでチェックされているアイテム
         checkedItems = new ArrayList<>();
@@ -720,76 +745,228 @@ public class InputActivity extends AppCompatActivity {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
                         if (!checkedItems.isEmpty()) {
-                            if (checkedItems.get(0) == 0) {
+                            if (checkedItems.get(0).toString().equals("0")) {
                                 changeTask();
-                                Log.d("checkedItem:", "" + checkedItems.get(0));
+                                if (BuildConfig.DEBUG) {
+                                    Log.d("checkedItem0", String.valueOf(checkedItems.get(0)));
+                                }
+
                             } else {
                                 changeTask();
-                                Log.d("checkedItem:", "" + checkedItems.get(0));
-                                //元の予定を更新する
+                                if (BuildConfig.DEBUG) {
+                                    Log.d("checkedItem1", String.valueOf(checkedItems.get(0)));
+                                }
                             }
                         }
                     }
                 })
                 .setNegativeButton("キャンセル", null)
                 .show();
-        }
+    }
 
-        */
-
-
-    /*
-    // checkedItems.get(0) == 0 単発予定を変更
-    // checkedItems.get(0) == 0 以降の予定を変更
+    // checkedItems.get(0) = 0 単発予定を変更
+    // checkedItems.get(0) = 0 以降の予定を変更
     private void changeTask(){
-        if (checkedItems.get(0) == 0){
+        if (checkedItems.get(0).toString().equals("0")) {
             Realm realm = Realm.getDefaultInstance();
             realm.beginTransaction();
+
+            //変更日以降の次のタスクを新規作成
+            Task mTask2 = new Task();
+            ToDo mToDo2 = new ToDo();
 
             //IDを設定
             RealmResults<Task> taskRealmResults = realm.where(Task.class).findAll();
             RealmResults<ToDo> todoResults = realm.where(ToDo.class).findAll();
 
-                int identifier;
-                identifier = taskRealmResults.max("id").intValue() + 1;
-                mTask.setId(identifier);
+            int task_id2 = taskRealmResults.max("id").intValue() + 2;
+            mTask2.setId(task_id2);
 
-                int identifier1;
-                identifier1 = todoResults.max("id").intValue() + 1;
-                mToDo.setId(identifier1);
+            int todo_id2;
+            todo_id2 = todoResults.max("id").intValue() + 2;
+            mToDo2.setId(todo_id2);
 
-
-            String title = mTitleEdit.getText().toString();
-            mTask.setTitle(title);
-
-            GregorianCalendar calendar = new GregorianCalendar(mYear, mMonth, mDay, mHour, mMinute);
-            date = calendar.getTime();
-            mTask.setDate(date);
+            //タイトル、繰り返し設定、画像、Timeは変更前のタスクの情報を引き継ぐ
+            mTask2.setTitle(mTask.getTitle());
 
             Calendar cal1 = Calendar.getInstance();
             //タスク一覧で時刻でソートするために年月日は固定とする
             cal1.set(2000, 1, 1, mHour, mMinute);
             time = cal1.getTime();
-            mTask.setDisplayTime(time);
-
-            SimpleDateFormat strdate = new SimpleDateFormat("yyyy/MM/dd");
-            String datestring = strdate.format(calendar.getTime());
-            mTask.setDatestring(datestring);
+            mTask2.setDisplayTime(time);
 
             //繰り返し設定の登録
-            mTask.setMonday(mMonday);
-            mTask.setTuesday(mTuesday);
-            mTask.setWednesday(mWednesday);
-            mTask.setThursday(mThursday);
-            mTask.setFriday(mFriday);
-            mTask.setSaturday(mSaturday);
-            mTask.setSunday(mSunday);
+            mTask2.setMonday(mTask.getMonday());
+            mTask2.setTuesday(mTask.getTuesday());
+            mTask2.setWednesday(mTask.getWednesday());
+            mTask2.setThursday(mTask.getThursday());
+            mTask2.setFriday(mTask.getFriday());
+            mTask2.setSaturday(mTask.getSaturday());
+            mTask2.setSunday(mTask.getSunday());
+
+            //画像の登録
+            if (mTask.getImageBytes() != null) {
+                mTask2.setImageBytes(mTask.getImageBytes());
+            }
+
+            //変更対象の次のタスクを設定する
+            Calendar cal = Calendar.getInstance();
+            cal.setTime(mDate);
+            cal.get(Calendar.DAY_OF_WEEK);
+            if (BuildConfig.DEBUG) {
+                Log.d("mDate_DOW", String.valueOf(cal.get(Calendar.DAY_OF_WEEK)));
+            }
+
+            //タスクの繰り返し設定を確認
+            ArrayList<Integer> weekday = new ArrayList<>();
+            if (mTask.getSunday()) {
+                weekday.add(1);
+            }
+            if (mTask.getMonday()) {
+                weekday.add(2);
+            }
+            if (mTask.getTuesday()) {
+                weekday.add(3);
+            }
+            if (mTask.getWednesday()) {
+                weekday.add(4);
+            }
+            if (mTask.getThursday()) {
+                weekday.add(5);
+            }
+            if (mTask.getFriday()) {
+                weekday.add(6);
+            }
+            if (mTask.getSaturday()) {
+                weekday.add(7);
+            }
+
+            if (BuildConfig.DEBUG) {
+                Log.d("weekday", String.valueOf(weekday));
+            }
+
+            for (int i = 0; i < weekday.size(); i++) {
+                if (weekday.get(i) > cal.get(Calendar.DAY_OF_WEEK)) {
+                    nextDay = weekday.get(i);
+                    break;
+                }
+            }
+
+            if (nextDay == null) {
+                for (int i = 0; i < weekday.size(); i++) {
+                    if (weekday.get(i) + 7 > cal.get(Calendar.DAY_OF_WEEK)) {
+                        nextDay = weekday.get(i);
+                        break;
+                    }
+                }
+            }
+
+            if (BuildConfig.DEBUG) {
+                Log.d("nextDay", String.valueOf(nextDay));
+            }
+
+                nextAlarm = nextDay - cal.get(Calendar.DAY_OF_WEEK);
+
+                if (nextAlarm > 0) {
+                    nextAlarm = nextAlarm;
+                } else {
+                    nextAlarm = nextAlarm + 7;
+                }
+
+            if (BuildConfig.DEBUG) {
+                Log.d("nextAlarm", String.valueOf(nextAlarm));
+            }
+
+                //次回のタスク実行時刻を設定
+                Calendar ex_task = Calendar.getInstance();
+                ex_task.setTime(mTask.getDate());
+                int ex_task_hour = ex_task.get(Calendar.HOUR_OF_DAY);
+                int ex_task_minute = ex_task.get(Calendar.MINUTE);
+                Calendar taskTime = Calendar.getInstance();
+                taskTime.set(mYear, mMonth, mDay, ex_task_hour, ex_task_minute);
+                taskTime.add(Calendar.DAY_OF_MONTH, nextAlarm);
+                Date taskDate = taskTime.getTime();
+
+                mTask2.setDate(taskDate);
+
+
+                SimpleDateFormat strdate = new SimpleDateFormat("yyyy/MM/dd");
+                String datestring = strdate.format(taskDate);
+                mTask2.setDatestring(datestring);
+
+                //LastDateは初期値を設定
+                Calendar cal2 = Calendar.getInstance();
+                cal2.set(2099, 11, 31, 23, 59, 59);
+                cal2.set(Calendar.MILLISECOND,000);
+                defaltLastDate = cal2.getTime();
+                mTask2.setLastDate(defaltLastDate);
+
+                //mToDoの更新
+                mToDo2.setDate(date);
+                mToDo2.setDatestring(datestring);
+                mToDo2.setStatus(0);
+                mToDo2.setTaskId(mTask2.getId());
+
+
+            //変更前のタスクに終了日時を設定
+            mTask.setLastDate(mDate);
+
+            /*
+            //変更前のタスクのAlarmをキャンセル
+            AlarmManager alarmManager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
+
+            Intent intent = new Intent(getApplicationContext(), TaskAlarmReceiver.class);
+            PendingIntent pendingIntent = PendingIntent.getBroadcast(getApplicationContext(), mTask.getId(), intent, 0);
+
+            pendingIntent.cancel();
+            alarmManager.cancel(pendingIntent);
+            */
+
+            //変更後のタスクを新規作成
+            Task mTask1 = new Task();
+            ToDo mToDo1 = new ToDo();
+
+            //IDを設定
+            int task_id1 = taskRealmResults.max("id").intValue() + 1;
+            mTask1.setId(task_id1);
+
+            int todo_id1;
+            todo_id1 = todoResults.max("id").intValue() + 1;
+            mToDo1.setId(todo_id1);
+
+
+            String title = mTitleEdit.getText().toString();
+            mTask1.setTitle(title);
+
+            GregorianCalendar calendar = new GregorianCalendar(mYear, mMonth, mDay, mHour, mMinute);
+            date = calendar.getTime();
+            mTask1.setDate(date);
+
+            mTask1.setDisplayTime(time);
+
+            SimpleDateFormat strdate1 = new SimpleDateFormat("yyyy/MM/dd");
+            String datestring1 = strdate.format(calendar.getTime());
+            mTask1.setDatestring(datestring1);
+
+            //単発予定のため繰り返し設定なしで登録
+            mTask1.setMonday(false);
+            mTask1.setTuesday(false);
+            mTask1.setWednesday(false);
+            mTask1.setThursday(false);
+            mTask1.setFriday(false);
+            mTask1.setSaturday(false);
+            mTask1.setSunday(false);
+
+            mTask1.setLastDate(defaltLastDate);
+            if (BuildConfig.DEBUG) {
+                Log.d("defaltLastDate", String.valueOf(defaltLastDate));
+            }
 
             //mToDoの更新
-            mToDo.setDate(date);
-            mToDo.setDatestring(datestring);
-            mToDo.setStatus(0);
-            mToDo.setTaskId(mTask.getId());
+            mToDo1.setDate(date);
+            mToDo1.setDatestring(datestring1);
+            mToDo1.setStatus(0);
+            mToDo1.setTaskId(mTask1.getId());
 
             //画像の登録
             BitmapDrawable drawable = (BitmapDrawable) mImageView.getDrawable();
@@ -800,21 +977,23 @@ public class InputActivity extends AppCompatActivity {
                 bitmap.compress(Bitmap.CompressFormat.JPEG, 80, baos);
                 byte[] mBitmapArray = baos.toByteArray();
 
-                mTask.setImageBytes(mBitmapArray);
+                mTask1.setImageBytes(mBitmapArray);
             }
 
             realm.copyToRealmOrUpdate(mTask);
-            realm.copyToRealmOrUpdate(mToDo);
+            realm.copyToRealmOrUpdate(mTask2);
+            realm.copyToRealmOrUpdate(mToDo2);
+            realm.copyToRealmOrUpdate(mTask1);
+            realm.copyToRealmOrUpdate(mToDo1);
             realm.commitTransaction();
 
             realm.close();
 
-            //AlarmManagerの設定
             Intent resultIntent = new Intent(InputActivity.this, TaskAlarmReceiver.class);
-            resultIntent.putExtra(MainActivity.EXTRA_TASK, mTask.getId());
+            resultIntent.putExtra(MainActivity.EXTRA_TASK, mTask2.getId());
             PendingIntent resultPendingIntent = PendingIntent.getBroadcast(
                     this,
-                    mTask.getId(),
+                    mTask2.getId(),
                     resultIntent,
                     PendingIntent.FLAG_UPDATE_CURRENT
             );
@@ -827,17 +1006,44 @@ public class InputActivity extends AppCompatActivity {
                 alarmManager.setExact(AlarmManager.RTC_WAKEUP, calendar.getTimeInMillis(), resultPendingIntent);
             }
 
-        }else {
+            //AlarmManagerの設定
+            Intent resultIntent1 = new Intent(InputActivity.this, TaskAlarmReceiver.class);
+            resultIntent1.putExtra(MainActivity.EXTRA_TASK, mTask1.getId());
+            PendingIntent resultPendingIntent1 = PendingIntent.getBroadcast(
+                    this,
+                    mTask1.getId(),
+                    resultIntent1,
+                    PendingIntent.FLAG_UPDATE_CURRENT
+            );
+
+
+            //AlarmManager alarmManager = (AlarmManager) getSystemService(ALARM_SERVICE);
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                alarmManager.setAlarmClock(new AlarmManager.AlarmClockInfo(calendar.getTimeInMillis(), null), resultPendingIntent1);
+            } else {
+                alarmManager.setExact(AlarmManager.RTC_WAKEUP, calendar.getTimeInMillis(), resultPendingIntent1);
+            }
+
+            finish();
+            }
+        else {
             Realm realm = Realm.getDefaultInstance();
             realm.beginTransaction();
 
-            //変更前のタスクを削除
-            RealmResults<Task> beforeChangeTaskResults = realm.where(Task.class).equalTo("id", mTask.getId()).lessThan("date", mDate).findAll();
-            RealmResults<ToDo> beforeChangeToDoResults = realm.where(ToDo.class).equalTo("taskId", mTask.getId()).lessThan("date", mDate).findAll();
+            //変更前のタスクに終了日時を設定
+            mTask.setLastDate(mDate);
+            realm.copyToRealmOrUpdate(mTask);
 
-            beforeChangeTaskResults.deleteAllFromRealm();
-            beforeChangeToDoResults.deleteAllFromRealm();
-            realm.commitTransaction();
+            /*
+            //変更前のタスクのAlarmをキャンセル
+            AlarmManager alarmManager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
+
+            Intent intent = new Intent(getApplicationContext(), TaskAlarmReceiver.class);
+            PendingIntent pendingIntent = PendingIntent.getBroadcast(getApplicationContext(), mTask.getId(), intent, 0);
+
+            pendingIntent.cancel();
+            alarmManager.cancel(pendingIntent);
+            */
 
             //変更後のタスクを新規作成
             Task mTask1 = new Task();
@@ -881,6 +1087,19 @@ public class InputActivity extends AppCompatActivity {
             mTask1.setSaturday(mSaturday);
             mTask1.setSunday(mSunday);
 
+            if (mTask1.getLastDate() == null) {
+                Calendar cal2 = Calendar.getInstance();
+                cal2.set(Calendar.MILLISECOND,000);
+                cal2.set(2099, 11, 31, 23, 59,59);
+                defaltLastDate = cal2.getTime();
+            }
+            mTask1.setLastDate(defaltLastDate);
+            Long long_defaltLastDate = defaltLastDate.getTime();
+            if (BuildConfig.DEBUG) {
+                Log.d("defaltLastDate", String.valueOf(defaltLastDate));
+                Log.d("long_defaltLastDate", String.valueOf(long_defaltLastDate));
+            }
+
             //mToDoの更新
             mToDo1.setDate(date);
             mToDo1.setDatestring(datestring);
@@ -898,6 +1117,7 @@ public class InputActivity extends AppCompatActivity {
 
                 mTask1.setImageBytes(mBitmapArray);
             }
+
 
             realm.copyToRealmOrUpdate(mTask1);
             realm.copyToRealmOrUpdate(mToDo1);
@@ -922,11 +1142,9 @@ public class InputActivity extends AppCompatActivity {
             } else {
                 alarmManager.setExact(AlarmManager.RTC_WAKEUP, calendar.getTimeInMillis(), resultPendingIntent);
             }
+            finish();
         }
-        finish();
     }
-    */
-
 
         // BACKボタンが押された時の処理
     //ToDo toolbarのバックキー押下時も表示

@@ -35,7 +35,7 @@ public class AlertDialogActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_alert_dialog);
-        //Log.d("AlertDialog", "AlertDialog");
+        Log.d("AlertDialog", "AlertDialog");
 
         vib = (Vibrator)getSystemService(VIBRATOR_SERVICE);
         vib.vibrate(4000);
@@ -76,10 +76,10 @@ public class AlertDialogActivity extends AppCompatActivity {
                     strFinishDate = new SimpleDateFormat("yyyy/MM/dd", Locale.getDefault()).format(finishDate);
                     finishDate1 = finishHour * 60 + finishMinute;
 
-                    //Log.d("finishDate", String.valueOf(finishDate));
+                    Log.d("finishDate", String.valueOf(finishDate));
 
                     diff = finishDate1 - taskDate1;
-                    //Log.d("diff", String.valueOf(diff));
+                    Log.d("diff", String.valueOf(diff));
 
                     Realm realm1 = Realm.getDefaultInstance();
                     ToDo mToDo1 = realm1.where(ToDo.class).equalTo("datestring", strFinishDate).equalTo("taskId", mTask.getId()).findFirst();
@@ -114,7 +114,7 @@ public class AlertDialogActivity extends AppCompatActivity {
 
             Intent intent = getIntent();
             int taskId = intent.getIntExtra(MainActivity.EXTRA_TASK, -1);
-            //Log.d("taskId", String.valueOf(taskId));
+            Log.d("taskId", String.valueOf(taskId));
             Realm realm2 = Realm.getDefaultInstance();
             mTask = realm2.where(Task.class).equalTo("id", taskId).findFirst();
             realm2.close();

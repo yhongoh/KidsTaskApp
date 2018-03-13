@@ -78,7 +78,9 @@ public class TaskAdapter extends BaseAdapter {
         TextView textView2 = (TextView) convertView.findViewById(R.id.taskTextView);
         ImageView imageView = (ImageView) convertView.findViewById(R.id.imageView);
         checkTask = (ImageView) convertView.findViewById(R.id.checkTask);
-        //Log.d("TA_ImageView", "TA_ImageView");
+        if (BuildConfig.DEBUG) {
+            Log.d("TA_ImageView", "TA_ImageView");
+        }
 
         //今日の日付を同日比較をできるように変換
         final Calendar today = Calendar.getInstance();
@@ -91,10 +93,14 @@ public class TaskAdapter extends BaseAdapter {
         calToday.set(todayYear, todayMonth, todayDay, todayHour, todayMinute);
 
         mstrdate = new SimpleDateFormat("yyyy/MM/dd", Locale.getDefault()).format(mDate);
-        //Log.d("TA_mstrdate", mstrdate);
+        if (BuildConfig.DEBUG) {
+            Log.d("TA_mstrdate", mstrdate);
+        }
 
         final Realm realm = Realm.getDefaultInstance();
-        //Log.d("TA_onCre_taskId", String.valueOf(mTaskList.get(position).getId()));
+        if (BuildConfig.DEBUG) {
+            Log.d("TA_onCre_taskId", String.valueOf(mTaskList.get(position).getId()));
+        }
 
         RealmResults<ToDo> todoRealmResults = realm.where(ToDo.class).equalTo("datestring", mstrdate).findAll();
         RealmResults<ToDo> todoResults = realm.where(ToDo.class).findAll();
@@ -120,8 +126,10 @@ public class TaskAdapter extends BaseAdapter {
             realm.commitTransaction();
         }
 
-        //Log.d("TA_taskId", String.valueOf(mTaskList.get(position).getId()));
-        //Log.d("TA_todoRealmResults", String.valueOf(todoRealmResults));
+        if (BuildConfig.DEBUG) {
+            Log.d("TA_taskId", String.valueOf(mTaskList.get(position).getId()));
+            Log.d("TA_todoRealmResults", String.valueOf(todoRealmResults));
+        }
 
                 // int 0 check
                 // int 1 smile
@@ -130,27 +138,40 @@ public class TaskAdapter extends BaseAdapter {
 
         if (mToDo.getStatus() == 0) {
             checkTask.setImageResource(R.drawable.checkbox);
-            //Log.d("mToDo_status","0");
+            if (BuildConfig.DEBUG) {
+                Log.d("mToDo_status", "0");
+            }
         } else if (mToDo.getStatus() == 1) {
             checkTask.setImageResource(R.drawable.ok);
             checkTask.setColorFilter(Color.RED);
-            //Log.d("mToDo_status","1");
+            if (BuildConfig.DEBUG) {
+                Log.d("mToDo_status", "1");
+            }
         } else if (mToDo.getStatus() == 2) {
             checkTask.setImageResource(R.drawable.soso);
             checkTask.setColorFilter(Color.GREEN);
-            //Log.d("mToDo_status","2");
+            if (BuildConfig.DEBUG) {
+                Log.d("mToDo_status", "2");
+            }
         } else {
             checkTask.setImageResource(R.drawable.ng);
             checkTask.setColorFilter(Color.BLUE);
-            //Log.d("mToDo_status","3");
+            if (BuildConfig.DEBUG) {
+                Log.d("mToDo_status", "3");
+            }
         }
 
         checkTask.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                //Log.d("TA_onClick", "TA_onClick");
+                if (BuildConfig.DEBUG) {
+                    Log.d("TA_onClick", "TA_onClick");
+                }
+
                 int taskId1 = mTaskList.get(position).getId();
-                //Log.d("TA_onClick_taskID", String.valueOf(taskId1));
+                if (BuildConfig.DEBUG) {
+                    Log.d("TA_onClick_taskID", String.valueOf(taskId1));
+                }
 
                 ToDo mToDo1 = realm.where(ToDo.class).equalTo("datestring", mstrdate).equalTo("taskId", mTaskList.get(position).getId()).findFirst();
 
@@ -182,7 +203,10 @@ public class TaskAdapter extends BaseAdapter {
                 finishDate1 = finishHour * 60 + finishMinute;
 
                 diff = finishDate1 - taskDate1;
-                //Log.d("diff", String.valueOf(diff));
+                if (BuildConfig.DEBUG) {
+                    Log.d("diff", String.valueOf(diff));
+                }
+
 
                 // 今日のタスクのみ変更可能とする
                 Integer nextDay_Day_OF_MONTH = calTaskDate.get(Calendar.DAY_OF_MONTH)+1;
@@ -199,17 +223,24 @@ public class TaskAdapter extends BaseAdapter {
 
                     // タスク時刻
                     if (diff <= 3) {
-                        //Log.d("smile", "smile");
                         mToDo1.setStatus(1);
-                        //Log.d("changeStatus", "1");
+
+                        if (BuildConfig.DEBUG) {
+                            Log.d("smile", "smile");
+                            Log.d("changeStatus", "1");
+                        }
                     } else if (diff <= 5 && diff > 3) {
-                        //Log.d("soso", "soso");
                         mToDo1.setStatus(2);
-                        //Log.d("changeStatus", "2");
+                        if (BuildConfig.DEBUG) {
+                            Log.d("soso", "soso");
+                            Log.d("changeStatus", "2");
+                        }
                     } else if (diff > 5) {
                         mToDo1.setStatus(3);
-                        //Log.d("ng", "ng");
-                        //Log.d("changeStatus", "3");
+                        if (BuildConfig.DEBUG) {
+                            Log.d("ng", "ng");
+                            Log.d("changeStatus", "3");
+                        }
                     }
                     mToDo1.setDate(finishDate);
                     mToDo1.setDatestring(strFinishDate);
